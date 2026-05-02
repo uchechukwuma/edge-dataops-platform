@@ -1,0 +1,43 @@
+
+@"
+# Secrets (NEVER commit)
+.env
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.dll
+build/
+dist/
+*.egg-info/
+
+# C extensions
+c_library/*.o
+c_library/*.pyd
+c_library/*.so
+
+# Docker
+data/
+logs/
+volumes/
+*.log
+*.dockerignore
+
+# Airflow
+airflow_logs/
+*.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+"@ | Out-File -FilePath .gitignore -Encoding utf8
