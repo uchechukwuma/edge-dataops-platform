@@ -1,0 +1,101 @@
+// validator.c - Rolling checksum validation for sensor data
+#define PY_SSIZE_T_CLEAN
+#include <Python.h>
+#include <string.h>
+#include <stdint.h>
+
+// Rolling checksum algorithm (industrial PLC style)
+static uint8_t rolling_checksum(const char* data, int len) {
+    uint8_t checksum = 0x00;
+    for (int i = 0; i < len; i++) {
+        checksum ^= (uint8_t)data[i];
+        checksum = (checksum << 1) | (checksum >> 7);
+    }
+    return checksum;
+}
+
+// Validate a single sensor reading
+static PyObject* validate_sensor(PyObject* self, PyObject* args) {
+    const char* sensor_data;
+    
+    // Parse as string (not string+length to avoid issues)
+    if (!PyArg_ParseTuple(args, "s", &sensor_data)) {
+        return NULL;
+    }
+    
+    if (sensor_data == NULL) {
+        PyErr_SetString(PyExc_ValueError, "Sensor data cannot be NULL");
+        return NULL;
+    }
+    
+    int len = strlen(sensor_data);
+    uint8_t checksum = rolling_checksum(sensor_data, len);
+    return PyUnicode_FromFormat("%02X", checksum);
+}
+
+// Batch validation for high throughput testing
+static PyObject* validate_batch(PyObject* self, PyObject* args) {
+    PyObject* batch_list;
+    
+    if (!PyArg_ParseTuple(args, "O", &batch_list)) {
+        return NULL;
+    }
+    
+    if (!PyList_Check(batch_list)) {
+        PyErr_SetString(PyExc_TypeError, "Expected a list");
+        return NULL;
+    }
+    
+    Py_ssize_t batch_size = PyList_Size(batch_list);
+    PyObject* results = PyList_New(batch_size);
+    
+    if (results == NULL) {
+        return NULL;
+    }
+    
+    for (Py_ssize_t i = 0; i < batch_size; i++) {
+        PyObject* item = PyList_GetItem(batch_list, i);
+        
+        // Convert to string
+        const char* data = PyUnicode_AsUTF8(item);
+        if (data == NULL) {
+            PyErr_SetString(PyExc_TypeError, "All items must be strings");
+            Py_DECREF(results);
+            return NULL;
+        }
+        
+        int len = strlen(data);
+        uint8_t checksum = rolling_checksum(data, len);
+        PyObject* result_str = PyUnicode_FromFormat("%02X", checksum);
+        
+        if (result_str == NULL) {
+            Py_DECREF(results);
+            return NULL;
+        }
+        
+        PyList_SetItem(results, i, result_str);
+    }
+    
+    return results;
+}
+
+// Module method definitions
+static PyMethodDef ValidatorMethods[] = {
+    {"validate", validate_sensor, METH_VARARGS, "Validate sensor reading, return checksum hex."},
+    {"validate_batch", validate_batch, METH_VARARGS, "Validate batch of sensor readings."},
+    {NULL, NULL, 0, NULL}
+};
+
+// Module definition
+static struct PyModuleDef validator_module = {
+    PyModuleDef_HEAD_INIT,
+    "validator",
+    "High-performance C extension for sensor data validation",
+    -1,
+    ValidatorMethods
+};
+
+// Module initialization
+PyMODINIT_FUNC PyInit_validator(void) {
+    return PyModule_Create(&validator_module);
+}
