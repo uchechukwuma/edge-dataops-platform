@@ -39,15 +39,15 @@ def create_kafka_producer():
             retries=3,
             acks='all'
         )
-        print(f"✅ Connected to Kafka: {KAFKA_BROKER}")
+        print(f">> Connected to Kafka: {KAFKA_BROKER}")
         return prod
     except Exception as e:
-        print(f"❌ Failed to connect to Kafka: {e}")
+        print(f">> Failed to connect to Kafka: {e}")
         return None
 
 def on_connect(client, userdata, flags, rc):
     """MQTT connect callback"""
-    print(f"✅ Connected to MQTT: {MQTT_BROKER}:{MQTT_PORT} (rc={rc})")
+    print(f">> Connected to MQTT: {MQTT_BROKER}:{MQTT_PORT} (rc={rc})")
     client.subscribe(MQTT_TOPIC)
     print(f"📡 Subscribed to topic: {MQTT_TOPIC}")
 
@@ -69,22 +69,22 @@ def on_message(client, userdata, msg):
         
         # Progress report every 1000 messages
         if stats["received"] % 1000 == 0:
-            print(f"📊 Bridge Status | Received: {stats['received']} | Produced: {stats['produced']} | Failed: {stats['failed']}")
+            print(f">> Bridge Status | Received: {stats['received']} | Produced: {stats['produced']} | Failed: {stats['failed']}")
             
     except Exception as e:
         stats["failed"] += 1
-        print(f"⚠️ Error processing message: {e}")
+        print(f">> Error processing message: {e}")
 
 def signal_handler(sig, frame):
     """Handle Ctrl+C gracefully"""
-    print(f"\n\n📊 Final Bridge Statistics:")
+    print(f"\n\n>> Final Bridge Statistics:")
     print(f"   Messages received from MQTT: {stats['received']}")
     print(f"   Messages produced to Kafka: {stats['produced']}")
     print(f"   Failed: {stats['failed']}")
     if stats['received'] > 0:
         success_rate = (stats['produced'] / stats['received']) * 100
         print(f"   Success rate: {success_rate:.2f}%")
-    print("\n✅ Bridge stopped.")
+    print("\n>> Bridge stopped.")
     sys.exit(0)
 
 def main():

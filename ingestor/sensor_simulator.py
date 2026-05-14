@@ -60,11 +60,11 @@ def main():
     client.connect(MQTT_BROKER, MQTT_PORT, 60)
     client.loop_start()
     
-    print(f"🚀 Sensor Simulator Started")
+    print(f">> Sensor Simulator Started")
     print(f"   MQTT Broker: {MQTT_BROKER}:{MQTT_PORT}")
     print(f"   Topic: {MQTT_TOPIC}")
     print(f"   Rate: {RATE_PER_SECOND} msg/sec")
-    print(f"   C-Validator: ✅ Loaded\n")
+    print(f"   C-Validator: >> Loaded\n")
     
     message_count = 0
     start_time = time.time()
@@ -97,10 +97,10 @@ def main():
             if message_count % 1000 == 0:
                 elapsed = time.time() - start_time
                 actual_rate = message_count / elapsed
-                print(f"📊 Sent {message_count} msgs | Rate: {actual_rate:.0f} msg/sec | Last checksum: {checksum}")
+                print(f">> Sent {message_count} msgs | Rate: {actual_rate:.0f} msg/sec | Last checksum: {checksum}")
                 
     except KeyboardInterrupt:
-        print(f"\n\n✅ Simulator stopped. Total messages sent: {message_count}")
+        print(f"\n\n>> Simulator stopped. Total messages sent: {message_count}")
     
     client.loop_stop()
     client.disconnect()
