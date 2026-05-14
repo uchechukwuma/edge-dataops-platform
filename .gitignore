@@ -21,6 +21,8 @@ c_library/*.o
 c_library/*.pyd
 c_library/*.so
 
+docs\video-scripts
+
 # Docker
 data/
 logs/
