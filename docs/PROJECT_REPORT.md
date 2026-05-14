@@ -127,12 +127,13 @@ docker ps
 
 ## 5. Architecture Decision Records (ADRs)
 
+## 5. Architecture Decision Records (ADRs)
+
 | ADR | Decision | Status |
 |:---|:---|:---|
-| [ADR-001](docs/adr/ADR-001-hybrid-cloud-polyglot.md) | EMQX, Kafka KRaft, cloud offloading | ✅ Accepted |
-| [ADR-002](docs/adr/ADR-002-c-extension-validation.md) | C-extension for validation | ⏳ Draft |
-
----
+| [ADR-001](docs/adr/ADR-001-hybrid-cloud-polyglot.md) | EMQX, Kafka KRaft, cloud offloading | Accepted |
+| [ADR-002](docs/adr/ADR-002-c-extension-validation.md) | C-extension for validation (10M+ msg/sec) | Accepted |
+| [ADR-003](docs/adr/ADR-003-mqtt-kafka-bridge.md) | MQTT to Kafka bridge architecture (44k+ msgs, 0% loss) | Accepted |
 
 ## 6. Infrastructure Commands
 
