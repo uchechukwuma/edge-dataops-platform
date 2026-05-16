@@ -23,6 +23,9 @@ c_library/*.so
 
 docs\video-scripts
 docs\screenshots
+docs/screenshots/                   
+docs/video-scripts/
+venv/
 
 # Docker
 data/
