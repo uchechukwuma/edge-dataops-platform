@@ -10,7 +10,7 @@ try:
         consumer_timeout_ms=3000,
         value_deserializer=lambda x: json.loads(x.decode('utf-8'))
     )
-    print("✅ Connected to Kafka")
+    print(">> Connected to Kafka")
     
     count = 0
     for msg in consumer:
@@ -20,8 +20,8 @@ try:
             break
     
     if count == 0:
-        print("⚠️ No messages found. Run simulator first.")
+        print(">> No messages found. Run simulator first.")
     else:
-        print(f"✅ Read {count} messages")
+        print(f">> Read {count} messages")
 except Exception as e:
-    print(f"❌ Error: {e}")
+    print(f">> Error: {e}")

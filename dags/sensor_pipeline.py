@@ -49,7 +49,7 @@ def consume_from_kafka(**context):
             value_deserializer=lambda x: json.loads(x.decode('utf-8'))
         )
         
-        logger.info(f"✅ Connected to Kafka at {KAFKA_BROKER}")
+        logger.info(f">> Connected to Kafka at {KAFKA_BROKER}")
         logger.info(f"Consuming from topic: {KAFKA_TOPIC}")
         
         for message in consumer:
@@ -68,8 +68,8 @@ def consume_from_kafka(**context):
             if stats["total_processed"] % 1000 == 0:
                 logger.info(f"Processed {stats['total_processed']} messages...")
         
-        logger.info(f"📊 Final Stats - Total: {stats['total_processed']} | Validated: {stats['validated']} | Failed: {stats['failed_validation']}")
-        logger.info(f"📊 Sensor types: {stats['sensor_types']}")
+        logger.info(f">> Final Stats - Total: {stats['total_processed']} | Validated: {stats['validated']} | Failed: {stats['failed_validation']}")
+        logger.info(f">> Sensor types: {stats['sensor_types']}")
         
         context['ti'].xcom_push(key='stats', value=stats)
         
@@ -104,8 +104,8 @@ def aggregate_data(**context):
     with open(output_file, 'w') as f:
         json.dump(summary, f, indent=2)
     
-    logger.info(f"✅ Summary saved to: {output_file}")
-    logger.info(f"📊 Summary: {json.dumps(summary, indent=2)}")
+    logger.info(f">> Summary saved to: {output_file}")
+    logger.info(f">> Summary: {json.dumps(summary, indent=2)}")
     
     context['ti'].xcom_push(key='summary_file', value=output_file)
 
