@@ -2,9 +2,8 @@
 
 **Author:** Data Engineer Portfolio Project  
 **Date:** 2026-04-28  
-**Status:** Week 1 Complete | Week 2 In Progress
-
----
+**Last Update Date:**  2026-05-16 
+**Status:** Week 1-4 Complete | Week 5 In Progress
 
 ## 1. Executive Summary
 
@@ -14,7 +13,6 @@ This project demonstrates a production-grade DataOps platform designed for indus
 
 **Key Achievement:** Built a fully containerized data platform running on 16GB RAM / 8GB disk that processes streaming sensor data with sub-millisecond validation.
 
----
 
 ## 2. Architecture Overview
 
@@ -73,8 +71,6 @@ Gold (Aggregated) → dbt Transformations → Supabase (gold_metrics)
 Analytics → Streamlit Dashboard
 ```
 
----
-
 ## 3. Infrastructure Setup
 
 ### 3.1 Hardware Constraints
@@ -106,26 +102,64 @@ docker ps
 | Airflow UI | http://localhost:8080 | admin / admin |
 | Kafka Broker | localhost:9092 | No auth |
 
----
-
 ## 4. Implementation Status
 
 ### Week-by-Week Roadmap
 
 | Week | Focus | Status |
 |:---|:---|:---|
-| 1 | Docker infrastructure (EMQX+Kafka+Airflow) | ✅ Complete |
-| 2 | C-extension compilation & benchmark | 🔄 In Progress |
-| 3 | MQTT → Kafka bridge | ⏳ Pending |
-| 4 | Airflow DAG #1 (Bronze → Silver) | ⏳ Pending |
-| 5 | Cloud integration | ⏳ Pending |
+| 1 | Docker infrastructure (EMQX+Kafka+Airflow) |  Complete |
+| 2 | C-extension compilation & benchmark |  Complete |
+| 3 | MQTT → Kafka bridge |  Complete |
+| 4 | Airflow DAG #1 (Bronze → Silver) |  Complete |
+| 5 | Cloud integration | 🔄 In Progress |
 | 6 | dbt Transformations | ⏳ Pending |
 | 7 | Great Expectations tests | ⏳ Pending |
 | 8 | Streamlit dashboard + demo | ⏳ Pending |
 
----
+## Week 2: C-Extension (COMPLETE)
 
-## 5. Architecture Decision Records (ADRs)
+**Achievement:** 10,123,833 msg/sec validation (5,000x faster than Python)
+
+**Deliverables:**
+- `validator.c` - Rolling XOR checksum algorithm
+- `setup.py` - Build script for compilation
+- Compiled `.so` module
+
+**Test Result:** `validator.validate('test')` → `49`
+
+**ADR:** [ADR-002](./adr/ADR-002-c-extension-validation.md)
+
+## Week 3: MQTT → Kafka Bridge (COMPLETE)
+
+**Results:**
+- 44,000+ messages successfully bridged
+- 100% success rate (zero data loss)
+- C-validator integrated into simulator
+
+**Architecture:**
+```text
+Simulator (C-validated) → EMQX → Bridge → Kafka
+```
+**ADR:** [ADR-003](docs/adr/ADR-003-mqtt-kafka-bridge.md)
+
+### Week 4: Airflow Orchestration (COMPLETE)
+
+**Key Achievement:** 62,000+ messages processed via scheduled Airflow DAG
+
+**Deliverables:**
+- `dags/sensor_pipeline.py` - DAG with 3 tasks
+- `scripts/test_kafka.py` - Connection test utility
+
+**Performance:**
+| Metric | Result |
+|--------|--------|
+| Messages processed | 62,000+ |
+| DAG runs (successful) | 10+ |
+| Success rate | 100% |
+| Schedule interval | Every 5 minutes |
+
+**ADR:** [ADR-004](./adr/ADR-004-airflow-orchestration.md)
 
 ## 5. Architecture Decision Records (ADRs)
 
@@ -133,7 +167,8 @@ docker ps
 |:---|:---|:---|
 | [ADR-001](docs/adr/ADR-001-hybrid-cloud-polyglot.md) | EMQX, Kafka KRaft, cloud offloading | Accepted |
 | [ADR-002](docs/adr/ADR-002-c-extension-validation.md) | C-extension for validation (10M+ msg/sec) | Accepted |
-| [ADR-003](docs/adr/ADR-003-mqtt-kafka-bridge.md) | MQTT to Kafka bridge architecture (44k+ msgs, 0% loss) | Accepted |
+| [ADR-003](docs/adr/ADR-003-mqtt-kafka-bridge.md) | MQTT to Kafka bridge architecture (637k+ msgs, 0% loss) | Accepted |
+| [ADR-004](docs/adr/ADR-004-airflow-orchestration.md) | Airflow DAG orchestration (62,000+ msgs, scheduled every 5 min) | Accepted |
 
 ## 6. Infrastructure Commands
 
@@ -148,8 +183,6 @@ docker compose down
 docker system prune -f
 ```
 
----
-
 ## 7. Performance Benchmarks
 
 | Test | Expected | Actual |
@@ -158,7 +191,6 @@ docker system prune -f
 | Throughput | 15,000 msg/sec | ___ |
 | Speedup (vs Python) | 7.5x | ___ |
 
----
 
 ## 8. Resume Highlights
 
