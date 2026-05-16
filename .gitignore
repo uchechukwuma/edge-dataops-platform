@@ -22,6 +22,7 @@ c_library/*.pyd
 c_library/*.so
 
 docs\video-scripts
+docs\screenshots
 
 # Docker
 data/
