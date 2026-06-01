@@ -1,4 +1,7 @@
-version: '3.8'
+networks:
+  edge_platform_net:
+    name: edge_platform_net
+    driver: bridge
 
 services:
   emqx:
@@ -7,150 +10,151 @@ services:
     ports:
       - "1883:1883"
       - "18083:18083"
-      - "8083:8083"
-      - "8883:8883"
-    volumes:
-      - ./data/emqx:/opt/emqx/data
-      - ./logs/emqx:/opt/emqx/log
-    restart: unless-stopped
+    networks:
+      - edge_platform_net
     healthcheck:
       test: ["CMD", "emqx", "ping"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
-      retries: 5
-    logging: &default-logging
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+      retries: 10
+    restart: unless-stopped
 
+  # In your docker-compose.yml, replace your kafka service with this exact configuration
   kafka:
     image: apache/kafka:3.7.0
     container_name: kafka_broker
     ports:
       - "9092:9092"
+      - "29092:29092"
+    networks:
+      - edge_platform_net
     environment:
       KAFKA_NODE_ID: 1
-      KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
-      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@localhost:9093'
+      KAFKA_CLUSTER_ID: "4L62xdw2RwqN6C7vAjdtQw"
+      KAFKA_LISTENERS: 'INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093'
+      KAFKA_ADVERTISED_LISTENERS: 'INTERNAL://kafka_broker:9092,EXTERNAL://localhost:29092'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'INTERNAL'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_DIRS: '/var/lib/kafka/data'
       KAFKA_LOG_RETENTION_HOURS: 1
-      KAFKA_LOG_SEGMENT_BYTES: 104857600
-      KAFKA_LOG_RETENTION_BYTES: 536870912
-      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
     volumes:
-      - ./data/kafka:/tmp/kraft-combined-logs
+      - kafka_native_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
     restart: unless-stopped
-    logging: *default-logging
+    # Run as root to avoid permission issues
+    user: root
+
+  bridge:
+    build:
+      context: .
+      dockerfile: Dockerfile.bridge
+    container_name: mqtt_bridge
+    networks:
+      - edge_platform_net
+    environment:
+      MQTT_BROKER: emqx_broker
+      KAFKA_BROKER: kafka_broker:9092
+    depends_on:
+      - emqx
+      - kafka
+    restart: unless-stopped
+    volumes:
+      - ./bridge/mqtt_to_kafka.py:/app/mqtt_to_kafka.py
+
+  simulator:
+    build:
+      context: .
+      dockerfile: Dockerfile.simulator
+    container_name: sensor_simulator
+    networks:
+      - edge_platform_net
+    environment:
+      MQTT_BROKER: emqx_broker
+    depends_on:
+      - emqx
+    restart: unless-stopped
+    volumes:
+      - ./ingestor/sensor_simulator.py:/app/sensor_simulator.py
 
   airflow-postgres:
     image: postgres:15-alpine
     container_name: airflow_postgres
+    networks:
+      - edge_platform_net
     environment:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
       POSTGRES_DB: airflow
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
-    restart: unless-stopped
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "airflow"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
-      retries: 5
-    logging: *default-logging
-
-  airflow-init:
-    image: apache/airflow:2.7.2-python3.10
-    container_name: airflow_init
-    depends_on:
-      airflow-postgres:
-        condition: service_healthy
-    environment:
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
-      AIRFLOW__CORE__EXECUTOR: LocalExecutor
-    entrypoint: /bin/bash
-    command:
-      - -c
-      - |
-        airflow db init
-        airflow users create \
-          --username admin \
-          --password admin \
-          --firstname Data \
-          --lastname Engineer \
-          --role Admin \
-          --email admin@example.com
-        pip install kafka-python
-        exit 0
-    logging: *default-logging
+      retries: 10
+    restart: unless-stopped
 
   airflow-webserver:
-    image: apache/airflow:2.7.2-python3.10
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
     container_name: airflow_webserver
+    networks:
+      - edge_platform_net
     depends_on:
       airflow-postgres:
         condition: service_healthy
-      airflow-init:
-        condition: service_completed_successfully
-    environment:
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
-      AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      AIRFLOW__WEBSERVER__RBAC: "True"
     ports:
       - "8080:8080"
-    volumes:
-      - ./dags:/opt/airflow/dags
-      - ./logs:/opt/airflow/logs
-    command: >
-      bash -c "pip install kafka-python && airflow webserver"
-    restart: unless-stopped
-    logging: *default-logging
-
-  airflow-scheduler:
-    image: apache/airflow:2.7.2-python3.10
-    container_name: airflow_scheduler
-    depends_on:
-      airflow-postgres:
-        condition: service_healthy
-      airflow-init:
-        condition: service_completed_successfully
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file:
+      - .env
     environment:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__WEBSERVER__SECRET_KEY: "super_secret_edge_platform_key_123"
     volumes:
       - ./dags:/opt/airflow/dags
-      - ./logs:/opt/airflow/logs
     command: >
-      bash -c "pip install kafka-python && airflow scheduler"
+      bash -c "airflow db init &&
+               airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com 2>/dev/null || true &&
+               airflow webserver"
     restart: unless-stopped
-    logging: *default-logging
+
+  airflow-scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+    container_name: airflow_scheduler
+    networks:
+      - edge_platform_net
+    depends_on:
+      airflow-postgres:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file:
+      - .env
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__WEBSERVER__SECRET_KEY: "super_secret_edge_platform_key_123"
+    volumes:
+      - ./dags:/opt/airflow/dags
+    command: "airflow scheduler"
+    restart: unless-stopped
 
 volumes:
-  kafka_data:
+  kafka_native_data:
     driver: local
-    driver_opts:
-      type: none
-      device: ${PWD}/data/kafka
-      o: bind
-  postgres_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ${PWD}/data/postgres
-      o: bind
-  emqx_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ${PWD}/data/emqx
-      o: bind
-  emqx_log:
-    driver: local
-    driver_opts:
-      type: none
-      device: ${PWD}/logs/emqx
-      o: bind

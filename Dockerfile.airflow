@@ -1,0 +1,12 @@
+FROM apache/airflow:2.7.2-python3.10
+
+USER root
+# Install necessary build essentials for confluent-kafka
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+USER airflow
+# Pre-compile the dependencies safely before runtime
+RUN pip install --no-cache-dir confluent-kafka psycopg2-binary pymongo
