@@ -1,4 +1,3 @@
-// validator.c - Rolling checksum validation for sensor data
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <string.h>
@@ -14,11 +13,10 @@ static uint8_t rolling_checksum(const char* data, int len) {
     return checksum;
 }
 
-// Validate a single sensor reading
+// Validate a single sensor reading - Returns an Integer object
 static PyObject* validate_sensor(PyObject* self, PyObject* args) {
     const char* sensor_data;
     
-    // Parse as string (not string+length to avoid issues)
     if (!PyArg_ParseTuple(args, "s", &sensor_data)) {
         return NULL;
     }
@@ -30,10 +28,12 @@ static PyObject* validate_sensor(PyObject* self, PyObject* args) {
     
     int len = strlen(sensor_data);
     uint8_t checksum = rolling_checksum(sensor_data, len);
-    return PyUnicode_FromFormat("%02X", checksum);
+    
+    // Return a safe integer primitive to Python
+    return PyLong_FromLong((long)checksum);
 }
 
-// Batch validation for high throughput testing
+// Batch validation
 static PyObject* validate_batch(PyObject* self, PyObject* args) {
     PyObject* batch_list;
     
@@ -55,8 +55,6 @@ static PyObject* validate_batch(PyObject* self, PyObject* args) {
     
     for (Py_ssize_t i = 0; i < batch_size; i++) {
         PyObject* item = PyList_GetItem(batch_list, i);
-        
-        // Convert to string
         const char* data = PyUnicode_AsUTF8(item);
         if (data == NULL) {
             PyErr_SetString(PyExc_TypeError, "All items must be strings");
@@ -66,27 +64,20 @@ static PyObject* validate_batch(PyObject* self, PyObject* args) {
         
         int len = strlen(data);
         uint8_t checksum = rolling_checksum(data, len);
-        PyObject* result_str = PyUnicode_FromFormat("%02X", checksum);
         
-        if (result_str == NULL) {
-            Py_DECREF(results);
-            return NULL;
-        }
-        
-        PyList_SetItem(results, i, result_str);
+        // Append as Integer primitive
+        PyList_SetItem(results, i, PyLong_FromLong((long)checksum));
     }
     
     return results;
 }
 
-// Module method definitions
 static PyMethodDef ValidatorMethods[] = {
-    {"validate", validate_sensor, METH_VARARGS, "Validate sensor reading, return checksum hex."},
+    {"validate", validate_sensor, METH_VARARGS, "Validate sensor reading, return integer checksum."},
     {"validate_batch", validate_batch, METH_VARARGS, "Validate batch of sensor readings."},
     {NULL, NULL, 0, NULL}
 };
 
-// Module definition
 static struct PyModuleDef validator_module = {
     PyModuleDef_HEAD_INIT,
     "validator",
@@ -95,7 +86,6 @@ static struct PyModuleDef validator_module = {
     ValidatorMethods
 };
 
-// Module initialization
 PyMODINIT_FUNC PyInit_validator(void) {
     return PyModule_Create(&validator_module);
 }

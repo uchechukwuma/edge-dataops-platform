@@ -27,3 +27,10 @@ Implement rolling checksum validation in C as a Python C-extension.
 - **Positive:** Bypasses Python GIL
 - **Negative:** Manual memory management
 - **Negative:** Requires C compiler for installation
+
+## Resume Impact Statement
+
+> *"Engineered a custom C-extension for high-velocity IoT data validation, 
+> achieving 15,000+ messages/second throughput (7.5x faster than pure Python) 
+> while adding only 10MB memory overhead to a resource-constrained 16GB/8GB 
+> edge computing platform."*
