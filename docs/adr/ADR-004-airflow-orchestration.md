@@ -211,3 +211,11 @@ Schedule interval:	Every 5 minutes
 - [Apache Airflow Documentation](https://airflow.apache.org/docs/)
 - [Airflow LocalExecutor](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/executor/local.html)
 - [Kafka advertised.listeners explanation](https://rmoff.net/2018/08/02/kafka-listeners-explained/)
+
+### Post-Implementation Learnings (June 2026)
+
+**Consumer Library Evolution:**
+While the original decision to use Airflow's Kafka provider was correct, 
+production testing revealed the need to switch from `kafka-python` to 
+`confluent_kafka` for proper KRaft metadata handling. This is an implementation 
+detail, not a decision reversal.

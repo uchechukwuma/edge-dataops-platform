@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-Sensor Simulator with C-Extension Validation
-Generates fake sensor data, validates via C-extension, publishes to EMQX
+Sensor Simulator with C-Extension Validation and Retry Logic
 """
 
 import json
@@ -10,26 +9,35 @@ import random
 import sys
 import os
 
-# Add c_library to path for validator module
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'c_library'))
+sys.path.append('/app')
 
 import paho.mqtt.client as mqtt
-import validator
 
-# Configuration
-MQTT_BROKER = "localhost"
+try:
+    import validator
+    print(">> C-Validator loaded successfully")
+except ImportError as e:
+    print(f">> C-Validator not loaded: {e}")
+    class validator:
+        @staticmethod
+        def validate(data_str):
+            checksum = 0
+            for ch in data_str.encode('utf-8'):
+                checksum ^= ch
+                checksum = ((checksum << 1) | (checksum >> 7)) & 0xFF
+            return f"{checksum:02X}" # Clean modern format string assignment
+
+MQTT_BROKER = os.environ.get('MQTT_BROKER', 'emqx_broker')
 MQTT_PORT = 1883
 MQTT_TOPIC = "sensors/telemetry"
 
 SENSOR_IDS = ["temp_sensor_01", "pressure_sensor_02", "vibration_sensor_03", 
               "flow_sensor_04", "humidity_sensor_05"]
 
-RATE_PER_SECOND = 100  # Start conservative, increase later
+RATE_PER_SECOND = 100
 
 def generate_sensor_data():
-    """Generate random realistic sensor reading"""
     sensor_id = random.choice(SENSOR_IDS)
-    
     if "temp" in sensor_id:
         value = round(random.uniform(18.0, 35.0), 2)
         unit = "C"
@@ -42,10 +50,9 @@ def generate_sensor_data():
     elif "flow" in sensor_id:
         value = round(random.uniform(0, 100), 2)
         unit = "L/min"
-    else:  # humidity
+    else:
         value = round(random.uniform(30, 80), 2)
         unit = "%"
-    
     return {
         "sensor_id": sensor_id,
         "value": value,
@@ -54,54 +61,58 @@ def generate_sensor_data():
         "source": "simulator"
     }
 
+def connect_with_retry(client, max_retries=10, delay=5):
+    for attempt in range(max_retries):
+        try:
+            client.connect(MQTT_BROKER, MQTT_PORT, 60)
+            print(f">> Connected to MQTT broker after {attempt + 1} attempts")
+            return True
+        except Exception as e:
+            print(f"Connection attempt {attempt + 1}/{max_retries} failed: {e}")
+            if attempt < max_retries - 1:
+                time.sleep(delay)
+    return False
+
 def main():
-    # Connect to MQTT broker
     client = mqtt.Client()
-    client.connect(MQTT_BROKER, MQTT_PORT, 60)
+    if not connect_with_retry(client):
+        print(">> Failed to connect to MQTT broker after multiple attempts")
+        sys.exit(1)
     client.loop_start()
     
     print(f">> Sensor Simulator Started")
     print(f"   MQTT Broker: {MQTT_BROKER}:{MQTT_PORT}")
     print(f"   Topic: {MQTT_TOPIC}")
-    print(f"   Rate: {RATE_PER_SECOND} msg/sec")
-    print(f"   C-Validator: >> Loaded\n")
+    print(f"   Rate: {RATE_PER_SECOND} msg/sec\n")
     
     message_count = 0
     start_time = time.time()
     
     try:
         while True:
-            # Generate raw data
             raw_data = generate_sensor_data()
-            
-            # Convert to string for validation
             data_str = f"{raw_data['sensor_id']}|{raw_data['value']}|{raw_data['unit']}"
             
-            # Validate using C-extension
-            checksum = validator.validate(data_str)
+            # 1. Get the integer checksum primitive back from C
+            checksum_int = validator.validate(data_str)
             
-            # Add checksum to payload
-            raw_data["checksum"] = checksum
+            # 2. Format it to hex string safely inside Python's robust environment
+            real_hex_checksum = f"{int(checksum_int):02X}"
+            
+            raw_data["checksum"] = real_hex_checksum
             raw_data["validated"] = True
             
-            # Publish to MQTT
             payload = json.dumps(raw_data)
             client.publish(MQTT_TOPIC, payload)
-            
             message_count += 1
-            
-            # Rate limiting
             time.sleep(1.0 / RATE_PER_SECOND)
             
-            # Progress report every 1000 messages
             if message_count % 1000 == 0:
                 elapsed = time.time() - start_time
                 actual_rate = message_count / elapsed
-                print(f">> Sent {message_count} msgs | Rate: {actual_rate:.0f} msg/sec | Last checksum: {checksum}")
-                
+                print(f">> Sent {message_count} msgs | Rate: {actual_rate:.0f} msg/sec | Last checksum: {real_hex_checksum}")
     except KeyboardInterrupt:
         print(f"\n\n>> Simulator stopped. Total messages sent: {message_count}")
-    
     client.loop_stop()
     client.disconnect()
 
