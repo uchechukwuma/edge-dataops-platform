@@ -1,4 +1,4 @@
-# ⚡ Edge DataOps Platform
+# Edge DataOps Platform
 
 An enterprise-grade, resource-optimized industrial IoT telemetry pipeline engineered with C-optimized processing extensions, high-throughput message brokers, distributed streaming backbones, and cloud-native polyglot storage layers.
 
@@ -10,17 +10,17 @@ An enterprise-grade, resource-optimized industrial IoT telemetry pipeline engine
 
 ---
 
-##  What Makes This Unique
+## What Makes This Unique
 
 Unlike standard prototype pipelines, this platform is explicitly architected around edge computing physical constraints:
 
-* **⚡ Low-Latency C-Extension Validation:** Implemented a custom C-library binding layer to achieve **15,000+ messages/second** data checksum verification, executing 7.5x faster than native Python loops.
-* **📐 High-Efficiency KRaft Brokerage:** Executed Apache Kafka in native KRaft mode, removing the overhead dependency of Apache ZooKeeper and reclaiming **500MB** of localized container memory footprint.
-* **🏗️ Managed Polyglot Persistence Tier:** Decoupled storage workloads into a hybrid topology using MongoDB Atlas for raw transactional Bronze event logs and Supabase PostgreSQL for refined, analytics-ready Silver/Gold metrics.
-* **💰 Free-Tier Optimized Storage:** Implemented strategic 1-in-10 sampling (90% storage reduction) and 24-hour auto-pruning, achieving **12+ months of free tier sustainability** at 90+ messages/second.
-* **📝 Production Architecture Decision Records (ADRs):** Every structural tool choice, networking path, and schema definition is fully mapped out with rigorous trade-off logs.
+- **⚡ Low-Latency C-Extension Validation:** Implemented a custom C-library binding layer to achieve **15,000+ messages/second** data checksum verification, executing 7.5x faster than native Python loops.
+- **📐 High-Efficiency KRaft Brokerage:** Executed Apache Kafka in native KRaft mode, removing the overhead dependency of Apache ZooKeeper and reclaiming **500MB** of localized container memory footprint.
+- **🏗️ Managed Polyglot Persistence Tier:** Decoupled storage workloads into a hybrid topology using MongoDB Atlas for raw transactional Bronze event logs and Supabase PostgreSQL for refined, analytics-ready Silver/Gold metrics.
+- **💰 Free-Tier Optimized Storage:** Implemented strategic 1-in-10 sampling (90% storage reduction) and 24-hour auto-pruning, achieving **12+ months of free tier sustainability** at 90+ messages/second.
+- **📝 Production Architecture Decision Records (ADRs):** Every structural tool choice, networking path, and schema definition is fully mapped out with rigorous trade-off logs.
 
-## 🏗️ Updated Architecture Diagram
+## Updated Architecture Diagram
 
 ```mermaid
 flowchart TB
@@ -60,51 +60,52 @@ flowchart TB
     Supabase -->|Direct Metric Ingestion Query| Streamlit
 ```
 
-- **For a detailed breakdown of architectural trade-offs, research goals, and project history, see the Full Project Report.**
+- For a detailed breakdown of architectural trade-offs, research goals, and project history, see the Full Project Report.
 
 ## Project Structure
 
 ```text
 edge-dataops-platform/
-├── data/                      # Persistent Local Volume Mount Storage
-│   ├── kafka/                 # Kafka broker cluster segment logs (500MB limit)
-│   ├── postgres/              # Local Airflow state metadata engine database
-│   └── emqx/                  # EMQX configuration states + retained telemetry
-├── logs/                      # Automated rolling system log rotation outputs
+├── data/                         # Persistent Local Volume Mount Storage
+│   ├── kafka/                    # Kafka broker cluster segment logs (500MB limit)
+│   ├── postgres/                 # Local Airflow state metadata engine database
+│   └── emqx/                     # EMQX configuration states + retained telemetry
+├── logs/                         # Automated rolling system log rotation outputs
 │   └── emqx/
-├── c_library/                 # C-Extension Processing Engine
-│   ├── validator.c            # Native C low-latency rolling checksum algorithm
-│   ├── setup.py               # Python C-types build integration deployment script
-│   └── test_validator.py      # High-speed data throughput benchmarking suite
-├── dags/                      # Airflow Orchestration Execution DAG Maps
-├── dbt_models/                # dbt analytical transform layer (Silver → Gold)
-│   ├── dbt_project.yml        # dbt core configuration schema map
-│   └── models/                # Modular analytics mart queries
-├── ingestor/                  # Industrial IoT sensor simulator configuration
+├── c_library/                    # C-Extension Processing Engine
+│   ├── validator.c               # Native C low-latency rolling checksum algorithm
+│   ├── setup.py                  # Python C-types build integration deployment script
+│   └── test_validator.py         # High-speed data throughput benchmarking suite
+├── dags/                         # Airflow Orchestration Execution DAG Maps
+├── dbt_models/                   # dbt analytical transform layer (Silver → Gold)
+│   ├── dbt_project.yml           # dbt core configuration schema map
+│   └── models/                   # Modular analytics mart queries
+├── ingestor/                     # Industrial IoT sensor simulator configuration
 │   └── sensor_simulator.py
-├── bridge/                    # Custom cross-protocol sync handler
-│   └── mqtt_to_kafka.py       # High-performance MQTT-to-Kafka consumer engine
-├── tests/                     # Automated data validation mapping
-│   └── expect_suite.py        # Great Expectations schema assert suites
-├── docs/                      # Technical System Records
-│   ├── adr/                   # Formal Architecture Decision Records
+├── bridge/                       # Custom cross-protocol sync handler
+│   └── mqtt_to_kafka.py          # High-performance MQTT-to-Kafka consumer engine
+├── tests/                        # Automated data validation mapping
+│   └── expect_suite.py           # Great Expectations schema assert suites
+├── docs/                         # Technical System Records
+│   ├── adr/                      # Formal Architecture Decision Records
 │   │   ├── ADR-001-hybrid-cloud-polyglot.md
 │   │   ├── ADR-002-c-extension-validation.md
 │   │   ├── ADR-003-mqtt-kafka-bridge.md
 │   │   ├── ADR-004-airflow-orchestration.md
-│   │   └── ADR-005-cloud-integration.md
-│   └── PROJECT_REPORT.md      # Comprehensive deep-dive master research paper
-├── docker-compose.yml         # Containerized automated system infrastructure orchestrator
-└── README.md                  # System Blueprint Manifest Document
+│   │   ├── ADR-005-cloud-integration.md
+│   │   ├── ADR-006-kafka-consumer-stabilization.md
+│   │   └── ADR-007-dbt-analytics-layer.md
+│   └── PROJECT_REPORT.md         # Comprehensive deep-dive master research paper
+├── docker-compose.yml            # Containerized automated system infrastructure orchestrator
+└── README.md                     # System Blueprint Manifest Document
 ```
-
 
 ## Quick Start
 
 ### Prerequisites
-- Docker Desktop (16GB RAM recommended, 8GB minimum)
-- 8GB free system disk allocation space
-- Local Python 3.9+ runtime environment
+- Docker Desktop (16GB RAM recommended, 8GB minimum).
+- 8GB free system disk allocation space.
+- Local Python 3.9+ runtime environment.
 
 ### Booting the Infrastructure Stack
 
@@ -120,7 +121,6 @@ docker compose up -d
 docker ps
 ```
 
-
 ## Active Microservice Endpoints
 
 | Service | URL | Credentials |
@@ -131,32 +131,37 @@ docker ps
 | Kafka Broker | localhost:9092 | No auth |
 
 ## Stop Everything
+
 To gracefully spin down and release localized container networking memory allocations, run:
-```Bash
+
+```bash
 docker compose down
 ```
 
 ## Performance Benchmarks
 
 | Test | Expected | Actual | Status |
-|:---|:---:|:---:|:---:|
+|---|---:|---:|---|
 | C-extension throughput | 15,000 msg/sec | 15,000+ msg/sec | OK |
 | Validation latency | <0.1ms | ~0.07ms | OK |
 | Bridge success rate | 100% | 0% loss | OK |
 | MongoDB documents | N/A | 11,500+ | OK |
 | Supabase records | N/A | 1,001+ | OK |
+| dbt silver transformation | N/A | 44,501 records in 0.69s | OK |
+| dbt gold transformation | N/A | 5 rows in 0.37s | OK |
 | Free tier projection | N/A | 12+ months | OK |
 
 ## Architecture Decision Records (ADRs)
 
 | ADR | Decision | Impact |
-|-----|----------|--------|
+|---|---|---|
 | [ADR-001](docs/adr/ADR-001-hybrid-cloud-polyglot.md) | EMQX over Mosquitto, Kafka KRaft, cloud offloading | Saved 500MB RAM |
 | [ADR-002](docs/adr/ADR-002-c-extension-validation.md) | C-extension over pure Python | 15k+ msg/sec (7.5x faster) |
 | [ADR-003](docs/adr/ADR-003-mqtt-kafka-bridge.md) | MQTT to Kafka bridge architecture | 44k+ msgs, 0% loss |
 | [ADR-004](docs/adr/ADR-004-airflow-orchestration.md) | Airflow DAG orchestration | 62k+ msgs, every 5 min |
 | [ADR-005](docs/adr/ADR-005-cloud-integration.md) | Cloud storage with sampling | 12+ months free tier |
 | [ADR-006](docs/adr/ADR-006-kafka-consumer-stabilization.md) | KRaft + confluent_kafka fix | Resolved consumer deadlock |
+| [ADR-007](docs/adr/ADR-007-dbt-analytics-layer.md) | dbt analytics layer | 44,501 silver, 5 gold rows |
 
 ## Roadmap
 
@@ -166,8 +171,8 @@ docker compose down
 | 2 | C-extension compilation & benchmark |  Complete | 15k+ msg/sec |
 | 3 | MQTT → Kafka bridge |  Complete | 44k+ msgs, 0% loss |
 | 4 | Airflow DAG #1 (Bronze → Silver) |  Complete | 62k+ msgs processed |
-| 5 | Cloud integration (Supabase + MongoDB Atlas) |  Complete | 11,500+ docs, 1,001+ records |
-| 6 | dbt transformations (Silver → Gold) | ⏳ Pending | |
+| 5 | Cloud integration (Supabase + MongoDB Atlas) |  Complete | 11,500+ docs, 44,501 records |
+| 6 | dbt transformations (Silver → Gold) |  Complete | 44,501 silver, 5 gold rows |
 | 7 | Great Expectations tests | ⏳ Pending | |
 | 8 | Streamlit dashboard + demo video | ⏳ Pending | |
 
@@ -187,45 +192,48 @@ docker compose down
 ## Quick Test: Validating MQTT Ingestion Flow
 
 1. Access the web console interface at **`http://localhost:18083`** using `admin` / `public`.
-2. Select the **WebSocket Client** widget panel, and execute a connection state open.
-3. Establish a standard topic subscriber line targeting the channel: **`test`**.
-4. Generate a test message payload targeting the channel with this structured block:
+2. Select the **WebSocket Client** widget panel and establish a connection.
+3. Subscribe to the `test` topic.
+4. Send a test message payload:
    ```json
    {"sensor": "temp", "value": 23.5}
-    ```
-5. Confirm instant event delivery visualization inside your tracking dashboard logs.
+   ```
+5. Confirm instant event delivery in the dashboard logs.
 
 ## Troubleshooting & Known Resolutions
 
 ### Issue: Kafka Consumer Connection Hang (Resolved)
 
-**Symptom:** Airflow consumer connects but never receives messages
+**Symptom:** Airflow consumer connects but never receives messages.
 
-**Root Cause:** KRaft cluster uninitialized + advertised listener misconfiguration
+**Root cause:** KRaft cluster uninitialized + advertised listener misconfiguration.
 
 **Resolution:**
-1. Added `CLUSTER_ID` environment variable for auto-formatting
-2. Configured split listeners (INTERNAL/EXTERNAL) for Docker networking
-3. Switched from `kafka-python` to `confluent_kafka` (C-extension)
+1. Added `CLUSTER_ID` environment variable for auto-formatting.
+2. Configured split listeners (INTERNAL/EXTERNAL) for Docker networking.
+3. Switched from `kafka-python` to `confluent_kafka` (C-extension).
 
 ### Issue: Supabase DNS Resolution (Resolved)
 
-**Symptom:** `could not translate host name to address`
+**Symptom:** `could not translate host name to address`.
 
-**Root Cause:** Direct connection uses IPv6; Docker/WSL2 inconsistent IPv6 support
+**Root cause:** Direct connection uses IPv6; Docker/WSL2 has inconsistent IPv6 support.
 
-**Resolution:** Switched to Transaction Pooler endpoint (IPv4-compatible)
+**Resolution:** Switched to Transaction Pooler endpoint (IPv4-compatible).
 
 ### Issue: MongoDB Free Tier Capacity (Mitigated)
 
-**Solution:** Implemented 1-in-10 sampling + 24-hour auto-prune
-- **Before:** 11,500 docs/day (~50MB)
-- **After:** ~1,150 docs/day (~5MB)
-- **Result:** 12+ months of free tier sustainability
+**Solution:** Implemented 1-in-10 sampling + 24-hour auto-prune.
+
+- **Before:** 11,500 docs/day (~50MB).
+- **After:** ~1,150 docs/day (~5MB).
+- **Result:** 12+ months of free tier sustainability.
 
 ## License
+
 This platform is deployed under the terms of the MIT License.
 
 ## Connect
-* linkedin.com/in/uchechukwu-obi 
-* https://github.com/uchechukwuma/edge-dataops-platform
+
+- linkedin.com/in/uchechukwu-obi
+- [https://github.com/uchechukwuma/edge-dataops-platform](https://github.com/uchechukwuma/edge-dataops-platform)

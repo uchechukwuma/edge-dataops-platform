@@ -1,6 +1,4 @@
-
-@"
-# Secrets (NEVER commit)
+﻿# Secrets (NEVER commit)
 .env
 *.pem
 *.key
@@ -21,11 +19,15 @@ c_library/*.o
 c_library/*.pyd
 c_library/*.so
 
-docs\video-scripts
-docs\screenshots
-docs/screenshots/                   
+# Documentation assets (keep the .md files, ignore generated assets)
 docs/video-scripts/
+docs/screenshots/
+docs/Project_diagram/
+
+# Virtual environment
 venv/
+.env/
+.venv/
 
 # Docker
 data/
@@ -38,6 +40,11 @@ volumes/
 airflow_logs/
 *.db
 
+# dbt
+dbt_packages/
+target/
+logs/
+
 # IDE
 .vscode/
 .idea/
@@ -46,4 +53,3 @@ airflow_logs/
 # OS
 .DS_Store
 Thumbs.db
-"@ | Out-File -FilePath .gitignore -Encoding utf8

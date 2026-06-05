@@ -1,5 +1,5 @@
 """
-CLEAN PRODUCTION DAG - Kafka to MongoDB and Supabase
+CLEAN PRODUCTION DAG - Kafka to MongoDB and Supabase -- Using one Task Dag
 """
 
 from datetime import datetime, timedelta
@@ -75,7 +75,7 @@ def consume_and_write(**context):
                 continue
         
         consumer.close()
-        logger.info(f"✅ Total messages consumed: {len(messages)}")
+        logger.info(f">> Total messages consumed: {len(messages)}")
         
         if not messages:
             logger.warning("No messages consumed")
@@ -102,7 +102,7 @@ def consume_and_write(**context):
                 msg['_source'] = 'clean_production_dag'
             
             result = collection.insert_many(messages)
-            logger.info(f"✅ MongoDB: Inserted {len(result.inserted_ids)} documents")
+            logger.info(f">> MongoDB: Inserted {len(result.inserted_ids)} documents")
             client.close()
         except Exception as e:
             logger.error(f"MongoDB error: {e}")
@@ -154,7 +154,7 @@ def consume_and_write(**context):
             conn.commit()
             cur.close()
             conn.close()
-            logger.info(f"✅ Supabase: Inserted {count} validated records")
+            logger.info(f">> Supabase: Inserted {count} validated records")
             
         except Exception as e:
             logger.error(f"Supabase error: {e}")
