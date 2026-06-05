@@ -1,0 +1,12 @@
+﻿edge_platform:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: YOUR_SUPABASE_HOST
+      port: 5432
+      user: YOUR_SUPABASE_USER
+      password: YOUR_SUPABASE_PASSWORD
+      dbname: postgres
+      schema: analytics
+      threads: 4

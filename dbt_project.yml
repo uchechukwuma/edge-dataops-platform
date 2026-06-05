@@ -1,0 +1,26 @@
+# dbt_project.yml
+
+name: 'edge_platform'
+version: '1.0.0'
+config-version: 2
+
+profile: 'edge_platform'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  edge_platform:
+    silver:
+      +materialized: table
+    gold:
+      +materialized: table

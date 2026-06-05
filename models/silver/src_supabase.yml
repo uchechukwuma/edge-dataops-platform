@@ -1,0 +1,20 @@
+﻿version: 2
+
+sources:
+  - name: supabase_source
+    database: postgres
+    schema: dataops
+    tables:
+      - name: silver_sensor_data
+        description: "Validated sensor data from Edge DataOps Platform"
+        columns:
+          - name: sensor_id
+            description: "Unique identifier for the sensor"
+          - name: value
+            description: "Sensor reading value"
+          - name: unit
+            description: "Unit of measurement"
+          - name: validated
+            description: "Whether the reading passed C-extension validation"
+          - name: source_timestamp
+            description: "Original timestamp from sensor"
