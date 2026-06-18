@@ -1,239 +1,238 @@
-# Edge DataOps Platform
+# Edge DataOps Platform & Functional Safety Gateway
 
-An enterprise-grade, resource-optimized industrial IoT telemetry pipeline engineered with C-optimized processing extensions, high-throughput message brokers, distributed streaming backbones, and cloud-native polyglot storage layers.
+An industrial IoT telemetry platform that combines C-optimized validation, message brokering, stream processing, cloud-native storage, and automated data quality checks into a single end-to-end pipeline.
 
-[![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
-[![Kafka](https://img.shields.io/badge/Apache%20Kafka-231F20?style=for-the-badge&logo=apachekafka&logoColor=white)](https://kafka.apache.org)
-[![Airflow](https://img.shields.io/badge/Airflow-017CEE?style=for-the-badge&logo=apacheairflow&logoColor=white)](https://airflow.apache.org)
-[![EMQX](https://img.shields.io/badge/EMQX-47B8D0?style=for-the-badge&logo=mqtt&logoColor=white)](https://www.emqx.com)
-[![dbt](https://img.shields.io/badge/dbt-FF694B?style=for-the-badge&logo=dbt&logoColor=white)](https://www.getdbt.com)
+The system is designed around a **defensive safety communication layer inspired by EN 50159 principles** for untrusted transmission environments. It treats edge-to-cloud communication as a **gray channel** and applies validation, sampling, orchestration, and fail-fast checks before data reaches analytics or dashboard layers. EN 50159 is a safety-related communication standard that describes safety communication over transmission systems, and this project borrows its safety-layer mindset without claiming formal certification. [web:99][web:129]
 
 ---
 
-## What Makes This Unique
+## Overview
 
-Unlike standard prototype pipelines, this platform is explicitly architected around edge computing physical constraints:
+This repository demonstrates a production-style data platform with the following goals:
 
-- **⚡ Low-Latency C-Extension Validation:** Implemented a custom C-library binding layer to achieve **15,000+ messages/second** data checksum verification, executing 7.5x faster than native Python loops.
-- **📐 High-Efficiency KRaft Brokerage:** Executed Apache Kafka in native KRaft mode, removing the overhead dependency of Apache ZooKeeper and reclaiming **500MB** of localized container memory footprint.
-- **🏗️ Managed Polyglot Persistence Tier:** Decoupled storage workloads into a hybrid topology using MongoDB Atlas for raw transactional Bronze event logs and Supabase PostgreSQL for refined, analytics-ready Silver/Gold metrics.
-- **💰 Free-Tier Optimized Storage:** Implemented strategic 1-in-10 sampling (90% storage reduction) and 24-hour auto-pruning, achieving **12+ months of free tier sustainability** at 90+ messages/second.
-- **📝 Production Architecture Decision Records (ADRs):** Every structural tool choice, networking path, and schema definition is fully mapped out with rigorous trade-off logs.
+- Validate telemetry early at the edge.
+- Move events reliably through MQTT and Kafka.
+- Store raw and curated data in separate persistence layers.
+- Apply automated data quality checks before dbt transformations.
+- Keep the architecture lightweight enough to run in a constrained local environment.
+- Document design decisions through Architecture Decision Records (ADRs).
 
-## Updated Architecture Diagram
+---
 
-```mermaid
-flowchart TB
-    subgraph Edge["⚡ EDGE LAYER (Local - 16GB/8GB Optimization)"]
-        Sensor[Python Simulator<br/>+ C-Extension Validation<br/>15k+ msg/sec]
-        EMQX[EMQX Message Broker<br/>MQTT Port :1883]
-    end
+## Core Features
 
-    subgraph Backbone["🔄 STREAM BACKBONE (Local Docker Ecosystem)"]
-        Kafka[Kafka KRaft Core<br/>Port 9092<br/>1hr Log Retention<br/>CLUSTER_ID Initialized]
-        Airflow[Airflow Orchestrator<br/>Port 8080<br/>confluent_kafka Consumer<br/>2-Min Execution Loops]
-    end
+- **C-optimized validation layer** for fast checksum and payload screening.
+- **MQTT ingestion** through EMQX for edge telemetry transport.
+- **Kafka event backbone** for buffering and stream handoff.
+- **Airflow orchestration** for scheduled pipeline execution.
+- **Great Expectations quality gateway** for fail-fast validation between Silver and Gold layers.
+- **dbt transformations** for analytical modeling.
+- **Polyglot persistence** using MongoDB Atlas and Supabase PostgreSQL.
+- **Resource-aware design** with sampling and pruning to stay within free-tier and local machine limits.
+- **Formal documentation** through ADRs, project report, and functional safety case.
 
-    subgraph Sampling["🎯 SAMPLING & PRUNING LAYER"]
-        Decision{1-in-10 Sampling}
-        Prune[24-Hour Auto-Prune]
-    end
+---
 
-    subgraph Cloud["☁️ CLOUD STORAGE TIER (Free Tier Optimized)"]
-        MongoDB[(MongoDB Atlas<br/>Bronze Layer - Sampled Raw Logs<br/>1-in-10 + 24h Retention<br/>~5MB/month)]
-        Supabase[(Supabase PostgreSQL<br/>Silver/Gold - Clean Warehousing<br/>100% Validated Records<br/>~1MB/month)]
-    end
+## Architecture
 
-    subgraph Analytics["📊 ANALYTICS & PRESENTATION LAYER"]
-        dbt[dbt Transformations<br/>SQL Analytical Mart Models]
-        Streamlit[Streamlit BI Dashboard<br/>Port 8501]
-    end
-
-    Sensor -->|MQTT Protocol| EMQX
-    EMQX -->|Custom Broker Bridge| Kafka
-    Kafka -->|Log Consumed By| Airflow
-    Airflow -->|Raw Batch| Decision
-    Decision -->|90% discard| Prune
-    Decision -->|10% keep| MongoDB
-    Airflow -->|Validated Only| Supabase
-    Supabase -->|Transform T-Layer Lineage| dbt
-    Supabase -->|Direct Metric Ingestion Query| Streamlit
+```text
+Sensor Simulator
+   ↓
+C Validation Layer
+   ↓
+EMQX MQTT Broker
+   ↓
+Apache Kafka
+   ↓
+Airflow Orchestrator
+   ↓
+Great Expectations Gateway
+   ↓
+Supabase PostgreSQL (Silver)
+   ↓
+dbt Transformations
+   ↓
+Gold Analytics Layer
+   ↓
+Streamlit Dashboard
 ```
 
-- For a detailed breakdown of architectural trade-offs, research goals, and project history, see the Full Project Report.
+### Storage Layers
+
+- **Bronze:** MongoDB Atlas for sampled raw telemetry logs.
+- **Silver:** Supabase PostgreSQL for validated and normalized data.
+- **Gold:** dbt models for curated analytical outputs.
+
+---
+
+## Technology Stack
+
+| Layer | Tools |
+|---|---|
+| Edge validation | C, Python |
+| Messaging | EMQX, MQTT, Kafka |
+| Orchestration | Airflow |
+| Data quality | Great Expectations |
+| Transformation | dbt |
+| Storage | MongoDB Atlas, Supabase PostgreSQL |
+| Presentation | Streamlit |
+| DevOps | Docker, Docker Compose |
+
+---
 
 ## Project Structure
 
-```text
+```plaintext
 edge-dataops-platform/
-├── data/                         # Persistent Local Volume Mount Storage
-│   ├── kafka/                    # Kafka broker cluster segment logs (500MB limit)
-│   ├── postgres/                 # Local Airflow state metadata engine database
-│   └── emqx/                     # EMQX configuration states + retained telemetry
-├── logs/                         # Automated rolling system log rotation outputs
-│   └── emqx/
-├── c_library/                    # C-Extension Processing Engine
-│   ├── validator.c               # Native C low-latency rolling checksum algorithm
-│   ├── setup.py                  # Python C-types build integration deployment script
-│   └── test_validator.py         # High-speed data throughput benchmarking suite
-├── dags/                         # Airflow Orchestration Execution DAG Maps
-├── dbt_models/                   # dbt analytical transform layer (Silver → Gold)
-│   ├── dbt_project.yml           # dbt core configuration schema map
-│   └── models/                   # Modular analytics mart queries
-├── ingestor/                     # Industrial IoT sensor simulator configuration
-│   └── sensor_simulator.py
-├── bridge/                       # Custom cross-protocol sync handler
-│   └── mqtt_to_kafka.py          # High-performance MQTT-to-Kafka consumer engine
-├── tests/                        # Automated data validation mapping
-│   └── expect_suite.py           # Great Expectations schema assert suites
-├── docs/                         # Technical System Records
-│   ├── adr/                      # Formal Architecture Decision Records
-│   │   ├── ADR-001-hybrid-cloud-polyglot.md
-│   │   ├── ADR-002-c-extension-validation.md
-│   │   ├── ADR-003-mqtt-kafka-bridge.md
-│   │   ├── ADR-004-airflow-orchestration.md
-│   │   ├── ADR-005-cloud-integration.md
-│   │   ├── ADR-006-kafka-consumer-stabilization.md
-│   │   └── ADR-007-dbt-analytics-layer.md
-│   └── PROJECT_REPORT.md         # Comprehensive deep-dive master research paper
-├── docker-compose.yml            # Containerized automated system infrastructure orchestrator
-└── README.md                     # System Blueprint Manifest Document
+├── data/
+├── logs/
+├── c_library/
+├── dags/
+├── dbt_models/
+├── ingestor/
+├── bridge/
+├── scripts/
+├── docs/
+│   ├── adr/
+│   ├── PROJECT_REPORT.md
+│   └── FUNCTIONAL_SAFETY_CASE.md
+├── docker-compose.yml
+└── README.md
 ```
+
+---
+
+## Key Results
+
+| Metric | Result |
+|---|---|
+| C-extension throughput | 15,000+ messages/sec |
+| Data quality checks | 12 rules enforced |
+| Validated records | 181,000+ |
+| dbt runtime | 44,501 records in 2.31s |
+| Memory overhead | ~50 MB |
+| Message loss | 0% in test blocks |
+| Free-tier sustainability | 12+ months target |
+
+---
+
+## Safety Approach
+
+The platform applies a safety-inspired communication mindset:
+
+- Check payload integrity before trust.
+- Reject malformed or suspicious records early.
+- Use a fail-fast gate before analytics.
+- Keep validation results auditable.
+- Separate raw, validated, and modeled data clearly.
+
+This is a conceptual safety design inspired by EN 50159-style communication barriers, not a formal certification claim. [web:99][web:129]
+
+---
+
+## Architecture Decision Records
+
+Major implementation choices are documented in the ADR series:
+
+- ADR-001: Hybrid Cloud Polyglot Decoupling Strategy
+- ADR-002: Low-Latency C-Extension Verification
+- ADR-003: MQTT-to-Kafka Cross-Protocol Bridge
+- ADR-004: Airflow Orchestration
+- ADR-005: Free-Tier Resource Constraints via Sampling
+- ADR-006: Kafka Consumer Stabilization
+- ADR-007: dbt Analytics Layer
+- ADR-008: Great Expectations Quality Gateway
+
+---
 
 ## Quick Start
 
 ### Prerequisites
-- Docker Desktop (16GB RAM recommended, 8GB minimum).
-- 8GB free system disk allocation space.
-- Local Python 3.9+ runtime environment.
 
-### Booting the Infrastructure Stack
+- Docker Desktop.
+- Local Python 3.9+.
+- Enough disk space for containers and volumes.
+
+### Run the stack
 
 ```bash
-# Clone repository
 git clone https://github.com/uchechukwuma/edge-dataops-platform
 cd edge-dataops-platform
-
-# Start all services
 docker compose up -d
-
-# Verify containers are running
 docker ps
 ```
 
-## Active Microservice Endpoints
-
-| Service | URL | Credentials |
-|---|---|---|
-| EMQX Dashboard | [http://localhost:18083](http://localhost:18083/) | admin / public |
-| Airflow UI | [http://localhost:8080](http://localhost:8080/) | admin / admin |
-| MQTT Broker | localhost:1883 | No auth (dev) |
-| Kafka Broker | localhost:9092 | No auth |
-
-## Stop Everything
-
-To gracefully spin down and release localized container networking memory allocations, run:
+### Stop the stack
 
 ```bash
 docker compose down
 ```
 
-## Performance Benchmarks
+---
 
-| Test | Expected | Actual | Status |
-|---|---:|---:|---|
-| C-extension throughput | 15,000 msg/sec | 15,000+ msg/sec | OK |
-| Validation latency | <0.1ms | ~0.07ms | OK |
-| Bridge success rate | 100% | 0% loss | OK |
-| MongoDB documents | N/A | 11,500+ | OK |
-| Supabase records | N/A | 1,001+ | OK |
-| dbt silver transformation | N/A | 44,501 records in 0.69s | OK |
-| dbt gold transformation | N/A | 5 rows in 0.37s | OK |
-| Free tier projection | N/A | 12+ months | OK |
+## Local Endpoints
 
-## Architecture Decision Records (ADRs)
-
-| ADR | Decision | Impact |
+| Service | URL | Notes |
 |---|---|---|
-| [ADR-001](docs/adr/ADR-001-hybrid-cloud-polyglot.md) | EMQX over Mosquitto, Kafka KRaft, cloud offloading | Saved 500MB RAM |
-| [ADR-002](docs/adr/ADR-002-c-extension-validation.md) | C-extension over pure Python | 15k+ msg/sec (7.5x faster) |
-| [ADR-003](docs/adr/ADR-003-mqtt-kafka-bridge.md) | MQTT to Kafka bridge architecture | 44k+ msgs, 0% loss |
-| [ADR-004](docs/adr/ADR-004-airflow-orchestration.md) | Airflow DAG orchestration | 62k+ msgs, every 5 min |
-| [ADR-005](docs/adr/ADR-005-cloud-integration.md) | Cloud storage with sampling | 12+ months free tier |
-| [ADR-006](docs/adr/ADR-006-kafka-consumer-stabilization.md) | KRaft + confluent_kafka fix | Resolved consumer deadlock |
-| [ADR-007](docs/adr/ADR-007-dbt-analytics-layer.md) | dbt analytics layer | 44,501 silver, 5 gold rows |
-
-## Roadmap
-
-| Week | Focus | Status | Notes |
-|---:|---|---|---|
-| 1 | Docker infrastructure (EMQX + Kafka + Airflow) |  Complete | |
-| 2 | C-extension compilation & benchmark |  Complete | 15k+ msg/sec |
-| 3 | MQTT → Kafka bridge |  Complete | 44k+ msgs, 0% loss |
-| 4 | Airflow DAG #1 (Bronze → Silver) |  Complete | 62k+ msgs processed |
-| 5 | Cloud integration (Supabase + MongoDB Atlas) |  Complete | 11,500+ docs, 44,501 records |
-| 6 | dbt transformations (Silver → Gold) |  Complete | 44,501 silver, 5 gold rows |
-| 7 | Great Expectations tests | ⏳ Pending | |
-| 8 | Streamlit dashboard + demo video | ⏳ Pending | |
-
-## Disk Space Management
-
-| Component | Location | Max Size | Auto-cleanup |
-|---|---|---:|---|
-| Kafka logs | `data/kafka/` | 500 MB | 1 hour retention |
-| Postgres (Airflow) | `data/postgres/` | 100 MB | Manual |
-| EMQX data | `data/emqx/` | 50 MB | Manual |
-| Docker images | Docker store | 3 GB | `docker system prune` |
-
-*Total expected: ~4.5 GB (well within the strict 8 GB edge limitation host pool).*
+| EMQX Dashboard | http://localhost:18083 | Broker UI |
+| Airflow UI | http://localhost:8080 | Pipeline orchestration |
+| MQTT Broker | localhost:1883 | Development mode |
+| Kafka Broker | localhost:9092 | Event backbone |
+| Streamlit App | http://localhost:8501 | Dashboard, if enabled |
 
 ---
 
-## Quick Test: Validating MQTT Ingestion Flow
+## Validation Workflow
 
-1. Access the web console interface at **`http://localhost:18083`** using `admin` / `public`.
-2. Select the **WebSocket Client** widget panel and establish a connection.
-3. Subscribe to the `test` topic.
-4. Send a test message payload:
-   ```json
-   {"sensor": "temp", "value": 23.5}
-   ```
-5. Confirm instant event delivery in the dashboard logs.
+The pipeline is designed so that data only reaches Gold after passing quality checks:
 
-## Troubleshooting & Known Resolutions
+1. Sensor data is generated or ingested.
+2. Payload integrity is verified in the validation layer.
+3. Raw events are passed through the broker backbone.
+4. Data is written into Bronze and Silver layers.
+5. Great Expectations validates Silver-layer records.
+6. Failed checks stop downstream dbt execution.
+7. Passing records continue to Gold and analytics.
 
-### Issue: Kafka Consumer Connection Hang (Resolved)
+---
 
-**Symptom:** Airflow consumer connects but never receives messages.
+## Documentation
 
-**Root cause:** KRaft cluster uninitialized + advertised listener misconfiguration.
+This repository includes the following deeper documents:
 
-**Resolution:**
-1. Added `CLUSTER_ID` environment variable for auto-formatting.
-2. Configured split listeners (INTERNAL/EXTERNAL) for Docker networking.
-3. Switched from `kafka-python` to `confluent_kafka` (C-extension).
+- `docs/PROJECT_REPORT.md` — full technical project report.
+- `docs/FUNCTIONAL_SAFETY_CASE.md` — safety-oriented design and hazard discussion.
+- `docs/adr/` — architecture decision records for each major design choice.
 
-### Issue: Supabase DNS Resolution (Resolved)
+---
 
-**Symptom:** `could not translate host name to address`.
+## Why This Project Matters
 
-**Root cause:** Direct connection uses IPv6; Docker/WSL2 has inconsistent IPv6 support.
+This project is useful because it shows:
 
-**Resolution:** Switched to Transaction Pooler endpoint (IPv4-compatible).
+- Systems thinking.
+- End-to-end data engineering design.
+- Practical use of data quality gates.
+- Ability to work with edge, stream, and warehouse layers.
+- Comfort with documentation and engineering trade-offs.
 
-### Issue: MongoDB Free Tier Capacity (Mitigated)
+It is especially relevant for data engineering, industrial IoT, embedded-data, and smart-building roles.
 
-**Solution:** Implemented 1-in-10 sampling + 24-hour auto-prune.
+---
 
-- **Before:** 11,500 docs/day (~50MB).
-- **After:** ~1,150 docs/day (~5MB).
-- **Result:** 12+ months of free tier sustainability.
+## Resume Summary
+
+Designed and implemented an industrial IoT Edge DataOps platform with C-optimized telemetry validation, MQTT and Kafka streaming, Airflow orchestration, Great Expectations quality gating, and dbt analytics, processing 181,000+ records with fail-fast validation and resource-aware deployment.
+
+---
 
 ## License
 
-This platform is deployed under the terms of the MIT License.
+MIT License.
 
-## Connect
+---
 
-- linkedin.com/in/uchechukwu-obi
-- [https://github.com/uchechukwuma/edge-dataops-platform](https://github.com/uchechukwuma/edge-dataops-platform)
+## Contact
+
+- GitHub: `github.com/uchechukwuma/edge-dataops-platform`
+- LinkedIn: `linkedin.com/in/uchechukwu-obi`
