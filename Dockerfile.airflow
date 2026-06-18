@@ -9,4 +9,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 USER airflow
 # Pre-compile the dependencies safely before runtime
-RUN pip install --no-cache-dir confluent-kafka psycopg2-binary pymongo
+RUN pip install --no-cache-dir \
+    confluent-kafka \
+    psycopg2-binary \
+    pymongo \
+    great-expectations \
+    sqlalchemy
+
+# Copy GX configuration with correct ownership
+COPY --chown=airflow:root gx/ /opt/airflow/gx/
