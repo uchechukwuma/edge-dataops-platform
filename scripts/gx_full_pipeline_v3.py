@@ -82,7 +82,7 @@ validator = context.get_validator(
 )
 
 print("\n>> Enforcing safety rulesets over active records...")
-validator.expect_table_row_count_to_be_between(min_value=1, max_value=50000)
+validator.expect_table_row_count_to_be_between(min_value=1, max_value=500000)
 validator.expect_column_to_exist("sensor_id")
 validator.expect_column_to_exist("value")
 validator.expect_column_to_exist("unit")

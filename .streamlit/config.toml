@@ -1,0 +1,7 @@
+# .streamlit/config.toml
+[theme]
+primaryColor = "#00FF66"          # Safety Green accent
+backgroundColor = "#0A0E17"      # Deep industrial charcoal/navy
+secondaryBackgroundColor = "#161B26" # Card panels background
+textColor = "#FFFFFF"            # Crisp white text
+font = "monospace"               # Engineering/SCADA monospace layout

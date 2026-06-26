@@ -1,9 +1,8 @@
-{{ config(materialized='table') }}
+{{ config(materialized='view') }}
 
 SELECT 
-    date_trunc('hour', source_timestamp) as hourly_window,
+    source_timestamp as hourly_window, -- High-resolution timestamp directly from the edge
     sensor_category,
-    AVG(value) as avg_value,
-    COUNT(*) as reading_count
+    value as avg_value,                 -- Individual raw value reading
+    1 as reading_count
 FROM {{ ref('clean_sensor_data') }}
-GROUP BY 1, 2
